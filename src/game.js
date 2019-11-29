@@ -12,7 +12,11 @@ export default class Game extends React.Component {
         selectedAxis: {x: null, y: null}
       }],
       xIsNext: true,
-      clickNumbers: 0
+      clickNumbers: 0,
+      isAscendentOrder: true,
+      oderKey: 0,
+      styleList: '',
+      buttonLabel: 'Descentend'
     };
   }
 
@@ -22,72 +26,89 @@ export default class Game extends React.Component {
     const current = history[history.length - 1];
     const squares = current.squares.slice();
     let clickNumber = this.state.clickNumbers + 1;
-    //console.log(squaresi, col, row);
-    //squares[i].style = 'square-selected';
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
-    squares[i] = clickNumber % 2 === 0 ? 'O' : 'X';
-      this.setState({
-        history: history.concat([{
-          squares: squares,
-          selectedAxis: {x: col, y: row}
-        }]),
-        clickNumbers: history.length,
-        xIsNext: !this.state.xIsNext
-      });
+    squares[i] = clickNumber % 2 === 0 ? '🐑' : '👻';
+    this.setState({
+      history: history.concat([{
+        squares: squares,
+        selectedAxis: {x: col, y: row, index: i},
+        order: history.length
+      }]),
+      clickNumbers: history.length,
+      xIsNext: !this.state.xIsNext
+    });
   }
 
   jumpTo(step) {
     this.setState({
-      clickNumbers: step,
+      clickNumbers: step || 0,
       xIsNext: (step % 2) === 0,
     });
   }
 
-  renderMoveElement(history) {
-    return ( history.map((step, move) => {
-      let {selectedAxis} = step
-      const desc = move ?
-        `Go to move ${move}#. Axis (${selectedAxis.x}, ${selectedAxis.y})`:
-        'Go to game start';
+  renderRecordsButton(currentBoardHistory){
+    return currentBoardHistory.map((step, move) => {
+      let {x, y} = step.selectedAxis;
+      const desc = x && y ?
+      `Go to move ${step.order}#. Axis (${x}, ${y})`:
+      'Go to game start';
       return (
-        <li key={move}>
-          <button onClick={() => this.jumpTo(move)}>{desc}</button>
+        <li key={`order-${step.order}`}>
+          <button onClick={() => this.jumpTo(step.order)}>{desc}</button>
         </li>
       );
     })
-    )
   }
 
-  render() {
-  const history = this.state.history;
+render() {
+  const history = this.state.history.slice();
   const current = history[this.state.clickNumbers];
-  const winner = calculateWinner(current.squares);
-
+  const win = calculateWinner(current.squares);
   let status;
-  if (winner) {
-    status = 'Winner: ' + winner;
-  } else {
-    status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+  if (win && win.winner) {
+    status = 'Winner: ' + win.winner;
+  } else if(win){
+    status = 'Game has done.'
+  } 
+  else{
+    status = 'Next player: ' + (this.state.xIsNext ? '👻' : '🐑' );
   }
 
   return (
-        <div className="game">
-          <div className="game-board">
-            <Board 
-              squares={current.squares}
-              selectedAxis={current.selectedAxis}
-              onClick={(squareData) => this.handleClick(squareData)}
-            />
-          </div>
-          <div className="game-info">
-            <div>{status}</div>
-            <ol>{this.renderMoveElement(history)}</ol>
-          </div>
+      <div className="game">
+        <div className="game-board">
+          <Board 
+            squares={current.squares}
+            selectedAxis={current.selectedAxis}
+            winners={win ? win.squares : ""}
+            onClick={(squareData) => this.handleClick(squareData)}
+          />
         </div>
-      );
+        <div className="game-info">
+          <div>{status}</div>
+          <div>
+            <h2>🐺 Game Play Record</h2>
+            <button 
+              onClick={() => {
+                let [style, label] = !this.state.isAscendentOrder?['reversed', 'Ascendent'] : ['', 'Descentend']
+                this.setState(
+                {
+                  isAscendentOrder: !this.state.isAscendentOrder,
+                  styleList: style,
+                  buttonLabel: label
+                }
+                )}}>
+              {`Order ${this.state.isAscendentOrder? 'Descentend' : 'Ascendent'} `}
+            </button>
+          </div>
+          <ol reversed={this.state.isAscendentOrder? '' : 'reversed'} key="record-panel" >
+            {this.renderRecordsButton(!this.state.isAscendentOrder? history.reverse() : history)}
+          </ol>
+        </div>
+      </div>
+    );
   }
-
 
 }

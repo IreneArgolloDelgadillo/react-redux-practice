@@ -1,31 +1,3 @@
-var history = [
-    // Before first move
-    {
-      squares: [
-        null, null, null,
-        null, null, null,
-        null, null, null,
-      ]
-    },
-    // After first move
-    {
-      squares: [
-        null, null, null,
-        null, 'X', null,
-        null, null, null,
-      ]
-    },
-    // After second move
-    {
-      squares: [
-        null, null, null,
-        null, 'X', null,
-        null, null, 'O',
-      ]
-    },
-    // ...
-  ]
-
 export function calculateWinner(squares) {
     const lines = [
       [0, 1, 2],
@@ -40,8 +12,9 @@ export function calculateWinner(squares) {
     for (let i = 0; i < lines.length; i++) {
       const [a, b, c] = lines[i];
       if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return squares[a];
+        return { squares: lines[i], winner: squares[a]};
       }
     }
-    return null;
+
+    return !squares.includes(null);
   }
